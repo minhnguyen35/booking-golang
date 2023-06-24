@@ -5,10 +5,55 @@
 <div class="container">
     <div class="row">
         <div class="col">
-            <h1>This is the about page</h1>
-            <h2>This is from {{index .StringMap "test"}}</h2>
+            <h1>This is the general room page</h1>
+            <div class="container">
+        <div class="row">
+            <div class="col">
+                <img src="./static/images/general_room.jpg" class="img-fluid img-thumbnail mx-auto d-block room-image" alt="General Room Image">
+            </div>
+        </div>
+        <div class="row">
+            
+          <div class="col">
+            <h1>Welcome to Dream House</h1>
+            <p>Your away-from-home home, set on the majestic cliff with breathtaking view to the ocean!</p>
+          </div>
+        </div>
+        <div class="row">
+          <div class="col text-center">
+            <a href="#!" id="check-availability-btn" class="btn btn-success">Check Availability</a>
+          </div>
+        </div>
+      </div>
         </div>
     </div>
 </div>
 
+{{end}}
+
+{{define "js"}}
+    <script>
+    document.getElementById("check-availability-btn").addEventListener("click", function() {
+        let html = `
+          <form action="reservation.html" method="get" class="needs-validation">
+            <div class="row">
+              <div class="col">
+                <div class="row" id="reservation-dates-modal">
+                  <div class="col">
+                    <input id="start" type="text" disabled required name="start" class="form-control" placeholder="Arrival">
+                  </div>
+                  <div class="col">
+                    <input id="end" type="text" disabled required name="end" class="form-control" placeholder="Departure">  
+
+                  </div>
+                </div>
+              </div>
+              
+            </div>
+          </form>
+        `
+
+        attention.custom({msg: html, title:"Choose your date"})
+      })
+    </script>
 {{end}}

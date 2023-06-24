@@ -13,6 +13,7 @@ import (
 )
 
 const portNumber = ":8080"
+
 var app config.AppConfig
 var session *scs.SessionManager
 
@@ -21,29 +22,32 @@ func main() {
 
 	app.InProduction = false
 
-	session := scs.New()
-	session.Lifetime = 24*time.Hour
+	session = scs.New()
+	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.SameSite = http.SameSiteLaxMode
 	session.Cookie.Secure = app.InProduction
-	
 
 	app.Session = session
-	
+
 	templateCache, err := render.CreateTemplateCache()
 	if err != nil {
 		log.Fatal("cannot create template cache!")
 	}
 
 	app.TemplateCache = templateCache
-	app.UseCache = true
+	app.UseCache = false
 	repo := handlers.NewRepository(&app)
 	render.NewTemplates(&app)
 	handlers.NewHandlers(repo)
 
-	http.HandleFunc("/", handlers.Repo.Home)
-	http.HandleFunc("/about", handlers.Repo.About)
-
+	server := &http.Server{
+		Addr:    portNumber,
+		Handler: routes(&app),
+	}
 	fmt.Println(fmt.Sprintf("Staring application on port %s", portNumber))
-	_ = http.ListenAndServe(portNumber, nil)
+	err = server.ListenAndServe()
+	if err != nil {
+		log.Fatal(err)
+	}
 }
