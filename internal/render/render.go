@@ -18,7 +18,10 @@ func NewTemplates(a *config.AppConfig) {
 	app = a
 }
 
-func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData{
+func AddDefaultData(td *models.TemplateData, r *http.Request) *models.TemplateData {
+	td.Flash = app.Session.PopString(r.Context(), "flash")
+	td.Error = app.Session.PopString(r.Context(), "error")
+	td.Warning = app.Session.PopString(r.Context(), "warning")
 	td.CSRFToken = nosurf.Token(r)
 	return td
 }
@@ -30,7 +33,7 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templat
 	} else {
 		templateCache, _ = CreateTemplateCache()
 	}
-	
+
 	requestedTemplate, ok := templateCache[tmpl]
 	if !ok {
 		log.Fatal("Could not get template from cache!")
@@ -53,7 +56,7 @@ func RenderTemplate(w http.ResponseWriter, r *http.Request, tmpl string, templat
 func CreateTemplateCache() (map[string]*template.Template, error) {
 	// templateCache := make(map[string]*template.Template)
 	templateCache := map[string]*template.Template{}
-	
+
 	//get all template files
 	pages, err := filepath.Glob("./templates/*.page.tmpl")
 	if err != nil {
@@ -81,5 +84,3 @@ func CreateTemplateCache() (map[string]*template.Template, error) {
 	}
 	return templateCache, nil
 }
-
-
