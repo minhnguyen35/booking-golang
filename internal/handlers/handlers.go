@@ -2,12 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
 	"net/http"
 
 	"github.com/minhnguyen/internal/config"
 	"github.com/minhnguyen/internal/forms"
+	"github.com/minhnguyen/internal/helper"
 	"github.com/minhnguyen/internal/models"
 	"github.com/minhnguyen/internal/render"
 )
@@ -81,7 +82,8 @@ func (m *Repository) AvailabilityJSON(w http.ResponseWriter, r *http.Request) {
 
 	out, err := json.MarshalIndent(resp, "", "     ")
 	if err != nil {
-		log.Println(err)
+		helper.ServerError(w, err)
+		return
 	}
 	w.Header().Set("Content-Type", "application/json")
 
@@ -102,8 +104,9 @@ func (m *Repository) Reservation(w http.ResponseWriter, r *http.Request) {
 
 func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	err := r.ParseForm()
+	err = errors.New("this is an error message")
 	if err != nil {
-		log.Println(err)
+		helper.ServerError(w, err)
 		return
 	}
 
@@ -117,7 +120,7 @@ func (m *Repository) PostReservation(w http.ResponseWriter, r *http.Request) {
 	form := forms.New(r.PostForm)
 
 	form.Required("first_name", "last_name", "email")
-	form.MinLength("first_name", 10, r)
+	form.MinLength("first_name", 10)
 	form.IsEmail("email")
 
 	if !form.Valid() {
@@ -138,7 +141,7 @@ func (m *Repository) ReservationSummary(w http.ResponseWriter, r *http.Request) 
 	reservation, ok := m.AppConfig.Session.Get(r.Context(), "reservation").(models.Reservation)
 
 	if !ok {
-		log.Println("Cannot get item from session")
+		m.AppConfig.ErrorLog.Println("Cannot get item from session")
 		m.AppConfig.Session.Put(r.Context(), "error", "Can't get reservation from session")
 		http.Redirect(w, r, "/", http.StatusTemporaryRedirect)
 		return

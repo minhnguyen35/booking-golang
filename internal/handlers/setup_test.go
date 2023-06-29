@@ -3,9 +3,10 @@ package handlers
 import (
 	"encoding/gob"
 	"fmt"
+	"html/template"
+	"log"
 	"net/http"
 	"path/filepath"
-	"html/template"
 	"time"
 
 	"github.com/alexedwards/scs/v2"
@@ -17,33 +18,40 @@ import (
 	"github.com/minhnguyen/internal/render"
 )
 
-var app config.AppConfig
+var testApp config.AppConfig
 var session *scs.SessionManager
 var pathToTemplate = "./../../templates"
 var functions = template.FuncMap{}
+var infoLog *log.Logger
+var errorLog *log.Logger
 
 func getRoutes() http.Handler{
 	gob.Register(models.Reservation{})
 
-	app.InProduction = false
+	testApp.InProduction = false
+
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate | log.Ltime)
+	testApp.InfoLog = infoLog
+	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
+	testApp.ErrorLog = errorLog
 
 	session = scs.New()
 	session.Lifetime = 24 * time.Hour
 	session.Cookie.Persist = true
 	session.Cookie.SameSite = http.SameSiteLaxMode
-	session.Cookie.Secure = app.InProduction
+	session.Cookie.Secure = testApp.InProduction
 
-	app.Session = session
+	testApp.Session = session
 
 	templateCache, err := CreateTestTemplateCache()
 	if err != nil {
 		return nil
 	}
 
-	app.TemplateCache = templateCache
-	app.UseCache = true
-	repo := NewRepository(&app)
-	render.NewTemplates(&app)
+	testApp.TemplateCache = templateCache
+	testApp.UseCache = true
+	repo := NewRepository(&testApp)
+	render.NewTemplates(&testApp)
 	NewHandlers(repo)
 
 	mux := chi.NewRouter()
@@ -76,7 +84,7 @@ func NoSurf(next http.Handler) http.Handler {
 	csrf.SetBaseCookie(http.Cookie{
 		HttpOnly: true,
 		Path: "/",
-		Secure: app.InProduction,
+		Secure: testApp.InProduction,
 		SameSite: http.SameSiteLaxMode,
 	})
 	return csrf
