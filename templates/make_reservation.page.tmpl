@@ -9,10 +9,16 @@
         <h1>
             Make Reservation
         </h1>
-        <p><strong>Reservation Details</strong></p>
         {{$res := index .Data  "reservation"}}
+        <p><strong>Reservation Details</strong><br>
+            Room: {{index $res.Room.RoomName}} <br>
+            Arrival: {{index .StringMap "start_date"}} <br>
+            Departure: {{index .StringMap "end_date"}}
+        </p>
+        
         <form action="/make-reservation" method="post" class="has-validation" novalidate>
             <input type="hidden" name="csrf_token" value="{{.CSRFToken}}">
+            <input type="hidden" name="room_id" value="{{$res.RoomID}}">
             <div class="mt-5">
                 <label for="first_name">First Name</label>
                 {{with .Form.Errors.Get "first_name" }} 

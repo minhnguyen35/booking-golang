@@ -1,2 +1,5 @@
 .idea
 booking-golang
+run.sh
+.DS_store
+database.yml

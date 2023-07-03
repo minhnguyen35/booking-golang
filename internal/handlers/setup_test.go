@@ -6,6 +6,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"os"
 	"path/filepath"
 	"time"
 
@@ -25,12 +26,12 @@ var functions = template.FuncMap{}
 var infoLog *log.Logger
 var errorLog *log.Logger
 
-func getRoutes() http.Handler{
+func getRoutes() http.Handler {
 	gob.Register(models.Reservation{})
 
 	testApp.InProduction = false
 
-	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate | log.Ltime)
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	testApp.InfoLog = infoLog
 	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	testApp.ErrorLog = errorLog
@@ -51,7 +52,7 @@ func getRoutes() http.Handler{
 	testApp.TemplateCache = templateCache
 	testApp.UseCache = true
 	repo := NewRepository(&testApp)
-	render.NewTemplates(&testApp)
+	render.NewRenderer(&testApp)
 	NewHandlers(repo)
 
 	mux := chi.NewRouter()
@@ -83,8 +84,8 @@ func NoSurf(next http.Handler) http.Handler {
 
 	csrf.SetBaseCookie(http.Cookie{
 		HttpOnly: true,
-		Path: "/",
-		Secure: testApp.InProduction,
+		Path:     "/",
+		Secure:   testApp.InProduction,
 		SameSite: http.SameSiteLaxMode,
 	})
 	return csrf
@@ -125,4 +126,3 @@ func CreateTestTemplateCache() (map[string]*template.Template, error) {
 	}
 	return templateCache, nil
 }
-	

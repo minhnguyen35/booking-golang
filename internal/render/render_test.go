@@ -11,7 +11,7 @@ func TestAddDefaultdata(t *testing.T) {
 	var td models.TemplateData
 
 	r, err := getSession()
-	if err != nil{
+	if err != nil {
 		t.Error(err)
 	}
 
@@ -40,13 +40,13 @@ func TestRenderTemplate(t *testing.T) {
 
 	var ww myWriter
 
-	err = RenderTemplate(&ww, r, "home.page.tmpl", &models.TemplateData{})
+	err = Template(&ww, r, "home.page.tmpl", &models.TemplateData{})
 
 	if err != nil {
 		t.Error("Cannot writing template to browser")
 	}
 
-	err = RenderTemplate(&ww, r, "non-exist.page.tmpl", &models.TemplateData{})
+	err = Template(&ww, r, "non-exist.page.tmpl", &models.TemplateData{})
 
 	if err == nil {
 		t.Error("Writing non-exist template to browser")
@@ -55,21 +55,21 @@ func TestRenderTemplate(t *testing.T) {
 }
 
 func TestNewTemplate(t *testing.T) {
-	NewTemplates(app)
+	NewRenderer(app)
 }
 
 func TestCreateTemplateCache(t *testing.T) {
-	pathToTemplate ="../../templates"
+	pathToTemplate = "../../templates"
 	_, err := CreateTemplateCache()
 	if err != nil {
 		t.Error(err)
 	}
 }
 
-func getSession() (*http.Request, error){
+func getSession() (*http.Request, error) {
 	r, err := http.NewRequest("GET", "/", nil)
 
-	if err != nil{
+	if err != nil {
 		return nil, err
 	}
 
@@ -80,9 +80,9 @@ func getSession() (*http.Request, error){
 	return r, nil
 }
 
-type myWriter struct {}
+type myWriter struct{}
 
-func (w *myWriter) Header() http.Header{
+func (w *myWriter) Header() http.Header {
 	var h http.Header
 	return h
 }

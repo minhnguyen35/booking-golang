@@ -5,16 +5,17 @@
 <div class="container">
     <div class="row">
         <div class="col">
+            <h1>This is the general room page</h1>
             <div class="container">
         <div class="row">
             <div class="col">
-                <img src="./static/images/suite_room.jpg" class="img-fluid img-thumbnail mx-auto d-block room-image" alt="General Room Image">
+                <img src="./static/images/general_room.jpg" class="img-fluid img-thumbnail mx-auto d-block room-image" alt="General Room Image">
             </div>
         </div>
         <div class="row">
             
           <div class="col">
-            <h1>Major Suite Room</h1>
+            <h1>Welcome to Dream House</h1>
             <p>Your away-from-home home, set on the majestic cliff with breathtaking view to the ocean!</p>
           </div>
         </div>
@@ -34,15 +35,15 @@
     <script>
     document.getElementById("check-availability-btn").addEventListener("click", function() {
         let html = `
-          <form action="reservation.html" method="get" class="needs-validation">
+          <form id="check-availability-form" action="" method="post" class="needs-validation">
             <div class="row">
               <div class="col">
                 <div class="row" id="reservation-dates-modal">
                   <div class="col">
-                    <input id="start" type="text" disabled required name="start" class="form-control" placeholder="Arrival">
+                    <input id="start" type="text" disabled required name="start_date" class="form-control" placeholder="Arrival">
                   </div>
                   <div class="col">
-                    <input id="end" type="text" disabled required name="end" class="form-control" placeholder="Departure">  
+                    <input id="end" type="text" disabled required name="end_date" class="form-control" placeholder="Departure">  
 
                   </div>
                 </div>
@@ -52,7 +53,54 @@
           </form>
         `
 
-        attention.custom({msg: html, title:"Choose your date"})
+        attention.custom({msg: html, title:"Choose your date", 
+          willOpen: () => {
+            const elem = document.getElementById("reservation-dates-modal")
+            const rp = new DateRangePicker(elem, {
+              format: 'yyyy-mm-dd',
+              showOnFocus: true,
+              date: new Date()
+            })
+          },
+          didOpen: () => {
+            document.getElementById('start').removeAttribute('disabled')
+            document.getElementById('end').removeAttribute('disabled')
+          },
+          callback: function(result) {
+            console.log("called")
+
+            let form = document.getElementById("check-availability-form")
+            let formData = new FormData(form)
+
+            formData.append("csrf_token", "{{.CSRFToken}}")
+            formData.append("room_id", "2")
+
+            fetch('/search-availability-json', {
+              method: "post",
+              body: formData,
+            })
+              .then(response => response.json())
+              .then(data => {
+                if(data.ok){
+                  attention.custom({
+                    icon: 'success',
+                    showConfirmButton: false,
+                    msg: '<p>Room is available</p>' 
+                    +  '<p><a href="/book-room?id='
+                      + data.room_id
+                      + '&s=' + data.start_date
+                      + '&e=' + data.end_date
+                      + '" class="btn btn-primary">'
+                    + 'Book Now</a></p>'
+                  })
+                } else {
+                  attention.error({message: "No Availability"})
+                }
+              
+                console.log(data.message)
+              })
+          }
+        })
       })
     </script>
 {{end}}

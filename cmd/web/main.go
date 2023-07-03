@@ -10,6 +10,7 @@ import (
 
 	"github.com/alexedwards/scs/v2"
 	"github.com/minhnguyen/internal/config"
+	"github.com/minhnguyen/internal/driver"
 	"github.com/minhnguyen/internal/handlers"
 	"github.com/minhnguyen/internal/helper"
 	"github.com/minhnguyen/internal/models"
@@ -22,12 +23,16 @@ var app config.AppConfig
 var session *scs.SessionManager
 var infoLog *log.Logger
 var errorLog *log.Logger
+
 // main is the main function
 func main() {
-	err := run()
+	db, err := run()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	defer db.SQL.Close()
+
 	server := &http.Server{
 		Addr:    portNumber,
 		Handler: routes(&app),
@@ -39,12 +44,15 @@ func main() {
 	}
 }
 
-func run() error {
+func run() (*driver.DB, error) {
+	gob.Register(models.Reservation{})
+	gob.Register(models.Reservation{})
+	gob.Register(models.Reservation{})
 	gob.Register(models.Reservation{})
 
 	app.InProduction = false
 
-	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate | log.Ltime)
+	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	app.InfoLog = infoLog
 	errorLog = log.New(os.Stdout, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 	app.ErrorLog = errorLog
@@ -57,16 +65,25 @@ func run() error {
 
 	app.Session = session
 
+	//connect to db
+	log.Println("Connecting to Database...")
+	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=booking user=minhnguyen password=123456")
+	if err != nil {
+		log.Fatal("Cannot connect to db! Dying...")
+		return nil, err
+	}
+	log.Println("Connected to Database...")
+
 	templateCache, err := render.CreateTemplateCache()
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	app.TemplateCache = templateCache
 	app.UseCache = false
-	repo := handlers.NewRepository(&app)
-	render.NewTemplates(&app)
+	repo := handlers.NewRepository(&app, db)
+	render.NewRenderer(&app)
 	helper.NewHelpers(&app)
 	handlers.NewHandlers(repo)
-	return nil
+	return db, nil
 }
