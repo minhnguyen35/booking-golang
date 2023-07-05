@@ -1,6 +1,8 @@
 package models
 
-import "github.com/minhnguyen/internal/forms"
+import (
+	"github.com/minhnguyen/internal/forms"
+)
 
 type TemplateData struct {
 	StringMap map[string]string
@@ -12,4 +14,12 @@ type TemplateData struct {
 	Warning   string
 	Error     string
 	Form      *forms.Form
+}
+
+type MailData struct {
+	To string
+	From string
+	Subject string
+	Content string
+	Template string
 }

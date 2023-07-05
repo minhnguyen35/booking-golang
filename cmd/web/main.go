@@ -33,6 +33,9 @@ func main() {
 
 	defer db.SQL.Close()
 
+	defer close(app.MailChan)
+	listenForMail()
+
 	server := &http.Server{
 		Addr:    portNumber,
 		Handler: routes(&app),
@@ -49,6 +52,9 @@ func run() (*driver.DB, error) {
 	gob.Register(models.Reservation{})
 	gob.Register(models.Reservation{})
 	gob.Register(models.Reservation{})
+
+	mailChan := make(chan models.MailData)
+	app.MailChan = mailChan
 
 	app.InProduction = false
 
