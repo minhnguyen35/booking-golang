@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/gob"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
@@ -49,14 +50,31 @@ func main() {
 
 func run() (*driver.DB, error) {
 	gob.Register(models.Reservation{})
-	gob.Register(models.Reservation{})
-	gob.Register(models.Reservation{})
-	gob.Register(models.Reservation{})
+	gob.Register(models.User{})
+	gob.Register(models.Room{})
+	gob.Register(models.Restriction{})
+	gob.Register(map[string]int{})
 
+
+	inProduction := flag.Bool("production", true, "Application is in production")
+	useCache := flag.Bool("cache", true, "Use cache template")
+	dbName := flag.String("dbname", "", "Database name")
+	dbHost := flag.String("dbhost", "localhost", "Database host")
+	dbUser := flag.String("dbuser", "", "Database user")
+	dbPW := flag.String("dbpass", "", "Database password")
+	dbPort := flag.String("dbport", "5432", "Database port")
+	dbSSL := flag.String("dbssl", "disable", "Database ssl settings (disable, prefer, require)")
+
+	flag.Parse()
+	if *dbName == "" || *dbUser == "" {
+		fmt.Println("Missing required flags")
+		os.Exit(1)
+	}
 	mailChan := make(chan models.MailData)
 	app.MailChan = mailChan
 
-	app.InProduction = false
+	app.InProduction = *inProduction
+	app.UseCache = *useCache
 
 	infoLog = log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	app.InfoLog = infoLog
@@ -73,7 +91,9 @@ func run() (*driver.DB, error) {
 
 	//connect to db
 	log.Println("Connecting to Database...")
-	db, err := driver.ConnectSQL("host=localhost port=5432 dbname=booking user=minhnguyen password=123456")
+	connectionString := fmt.Sprintf("host=%s port=%s dbname=%s user=%s password=%s sslmode=%s",
+			 *dbHost, *dbPort, *dbName, *dbUser, *dbPW, *dbSSL)
+	db, err := driver.ConnectSQL(connectionString)
 	if err != nil {
 		log.Fatal("Cannot connect to db! Dying...")
 		return nil, err
@@ -86,7 +106,6 @@ func run() (*driver.DB, error) {
 	}
 
 	app.TemplateCache = templateCache
-	app.UseCache = false
 	repo := handlers.NewRepository(&app, db)
 	render.NewRenderer(&app)
 	helper.NewHelpers(&app)
